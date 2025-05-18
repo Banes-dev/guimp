@@ -1,42 +1,41 @@
 ifeq ($(OS),Windows_NT)
-	IS_WINDOWS := 1
-else
-	IS_WINDOWS := 0
-endif
-
-ifeq ($(IS_WINDOWS),1)
 	SDL_PATH = ./libui/SDL_BUILD_Windows
 	LDFLAGS = -L$(SDL_PATH)/lib -lmingw32 -lSDL2main -lSDL2 -mwindows
 else
-	SDL_PATH = ./libui/SDL_BUILD_Windows
-	LDFLAGS = -L$(SDL_PATH)/lib -lSDL2 -lm        
+	SDL_PATH = ./libui/SDL_BUILD
+	LDFLAGS = -L$(SDL_PATH)/lib -lSDL2 -lm
 endif
 ## -lSDL2_image -lSDL2_ttf
 
 COMP = c++
 CFLAGS = -g -Wall -Wextra -Werror -std=c++11 -I./libui/src -I$(SDL_PATH)/include/SDL2
-LIBUI = ./libui/libui.a
 
 # Normal
 NAME = guimp
-FUNC = src/main.cpp
+FUNC = $(wildcard src/*.cpp)
 OBJS = $(FUNC:.cpp=.o)
+LIBUI = ./libui/libui.a
 
 
 # Compil
-all: 	${NAME}
+all: 	$(NAME)
 
-${NAME}: ${OBJS}
-	${COMP} ${CFLAGS} ${OBJS} ${LIBUI} ${LDFLAGS} -o ${NAME}
+$(NAME): $(LIBUI) $(OBJS)
+	$(COMP) $(CFLAGS) $(OBJS) $(LIBUI) $(LDFLAGS) -o $(NAME)
+
+$(LIBUI):
+	make -C ./libui
 
 %.o: %.cpp
-	${COMP} ${CFLAGS} -c $< -o $@
+	$(COMP) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f ${OBJS}
+	rm -f $(OBJS)
+	make -C ./libui clean
 
 fclean:	clean
-	rm -f ${NAME}
+	rm -f $(NAME)
+	make -C ./libui fclean
 
 re:	fclean all
 
