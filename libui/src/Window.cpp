@@ -2,15 +2,22 @@
 
 Window::Window(const std::string &title, int width, int height) : running(true)
 {
-    SDL_Init(SDL_INIT_VIDEO);
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+        throw (SDLInitException());
     window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+    if (window == NULL)
+        throw (WindowCantCreatedException());
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (renderer == NULL)
+        throw (RendererCantCreatedException());
 }
 
 Window::~Window()
 {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    window = NULL;
+    renderer = NULL;
     SDL_Quit();
 }
 
@@ -32,11 +39,26 @@ bool Window::isOpen()
 
 void Window::handleEvents()
 {
-    SDL_Event e;
-    while (SDL_PollEvent(&e))
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
     {
-        if (e.type == SDL_QUIT) running = false;
-        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+        if (event.type == SDL_QUIT)
+            running = false;
+        if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
             running = false;
     }
+}
+
+// Exceptions
+const char *Window::SDLInitException::what() const throw()
+{
+	return ("\033[0;31mSDL can't be init\033[0m");
+}
+const char *Window::WindowCantCreatedException::what() const throw()
+{
+	return ("\033[0;31mThe window can't be created\033[0m");
+}
+const char *Window::RendererCantCreatedException::what() const throw()
+{
+	return ("\033[0;31mThe renderer can't be created\033[0m");
 }
